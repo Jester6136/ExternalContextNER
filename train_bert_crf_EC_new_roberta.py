@@ -21,10 +21,6 @@ import json
 CONFIG_NAME = 'bert_config.json'
 WEIGHTS_NAME = 'pytorch_model.bin'
 
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
-                    datefmt='%m/%d/%Y %H:%M:%S',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
 parser = argparse.ArgumentParser()
 ## Required parameters
 parser.add_argument("--alpha",
@@ -211,8 +207,6 @@ else:
     n_gpu = 1
     # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
     torch.distributed.init_process_group(backend='nccl')
-logger.info("device: {} n_gpu: {}, distributed training: {}, 16-bits training: {}".format(
-    device, n_gpu, bool(args.local_rank != -1), args.fp16))
 
 if args.gradient_accumulation_steps < 1:
     raise ValueError("Invalid gradient_accumulation_steps parameter: {}, should be >= 1".format(
@@ -241,8 +235,15 @@ if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_t
 if not os.path.exists(args.output_dir):
     os.makedirs(args.output_dir)
 
+
+logging.basicConfig(filename= args.output_dir + "/output.log",filemode='w',format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
+                    datefmt='%m/%d/%Y %H:%M:%S',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 task_name = args.task_name.lower()
 
+logger.info("device: {} n_gpu: {}, distributed training: {}, 16-bits training: {}".format(
+    device, n_gpu, bool(args.local_rank != -1), args.fp16))
 if task_name not in processors:
     raise ValueError("Task not found: %s" % (task_name))
 
@@ -413,7 +414,8 @@ if args.do_train:
                 optimizer.step()
                 optimizer.zero_grad()
                 global_step += 1
-        print(f"===============Main loss: {tr_loss/nb_tr_steps}===============")
+        
+        logger.info(f"===============Main loss: {tr_loss/nb_tr_steps}===============")
 
         model.eval()
 

@@ -160,10 +160,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-finscope-demo-d.smart/Phi-3/cuda
-finscope-demo-d.smart/Phi-3/directml
-finscope-demo-d.smart/Phi-3/flagged
-
-finscope-demo-d.smart/Phi-3-demo/coffee_export.txt
-VLSP2016
+output_vlsp2016
 cache
+vlsp_MoRe_PHO_kc_image
+vlsp_MoRe_PHO_kc_text
+VLSP2016
+VLSP2018
+VLSP2021

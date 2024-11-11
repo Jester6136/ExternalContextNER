@@ -23,7 +23,7 @@ The key files and directories are:
 │   ├── model_architecture/
 │   ├── datasets/
 ├── tmp_data/                      # Temporary data storage
-├── run_twitter2015_more.sh        # Script to run Twitter dataset
+├── run_vlsp2016_more_image_roberta.sh        # Script to run Twitter dataset
 ├── ner_evaluate.py                # Evaluation script for NER models
 ```
 
@@ -57,5 +57,5 @@ pip install -r requirements.txt
 You can train the BERT-CRF model with external context using the following command:
 
 ```bash
-sh run_twitter2015_more.sh
+sh run_vlsp2016_more_image_roberta.sh
 ```
