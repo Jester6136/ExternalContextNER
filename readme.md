@@ -50,6 +50,32 @@ cd ExternalContext
 pip install -r requirements.txt
 ```
 
+## Import data 
+
+```
+git clone https://huggingface.co/jester6136/vlsp_external_context tmp_data
+```
+
+
+
+## Changing Labels in `dataset_bert_EC_new_roberta.py`
+
+In the file `modules/datasets/dataset_bert_EC_new_roberta.py`, you can change the label definitions as follows:
+
+1. Locate Label Definitions:  
+   Go to line 140 - 147, where the dataset labels are defined.
+
+2. Comment Out Unnecessary Datasets:  
+   If you’re working with a specific dataset, such as `vlsp2016`, you may want to comment out labels for other datasets. For example, you can retain only the `vlsp2016` labels.
+
+3. Example for `vlsp2016` Labels:
+   To configure for `vlsp2016`, update the return line as follows:
+
+```python
+# For vlsp2016
+return ["B-ORG", "B-MISC", "I-PER", "I-ORG", "B-LOC", "I-MISC", "I-LOC", "O", "B-PER", "E", "X", "<s>", "</s>"]
+```
+
 ## Usage
 
 ### Training BERT-CRF with External Context
@@ -57,5 +83,18 @@ pip install -r requirements.txt
 You can train the BERT-CRF model with external context using the following command:
 
 ```bash
-sh run_vlsp2016_more_image_roberta.sh
+python train_bert_crf_EC_new_roberta.py \
+    --do_train \
+    --do_eval \
+    --output_dir "./VLSP2016_img" \
+    --bert_model "vinai/phobert-base-v2" \
+    --learning_rate 3e-5 \
+    --data_dir "tmp_data/vlsp_MoRe_PHO_kc_image/VLSP2016" \
+    --num_train_epochs 12 \
+    --train_batch_size 8 \
+    --task_name "sonba" \
+    --cache_dir "cache" \
+    --max_seq_length 256
 ```
+
+also, I wrote some example sh file for 
