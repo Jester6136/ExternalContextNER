@@ -23,7 +23,7 @@ The key files and directories are:
 │   ├── model_architecture/
 │   ├── datasets/
 ├── tmp_data/                      # Temporary data storage
-├── run_vlsp2016_more_image_roberta.sh        # Script to run Twitter dataset
+├── run_vlsp2016_more_image_roberta.sh        # Script to run vlsp dataset
 ├── ner_evaluate.py                # Evaluation script for NER models
 ```
 
@@ -58,7 +58,7 @@ git clone https://huggingface.co/jester6136/vlsp_external_context tmp_data
 
 
 
-## Changing Labels in `dataset_bert_EC_new_roberta.py`
+## Changing Labels in `dataset_bert_EC_new_roberta.py` (Sorry about this, it's my fault for being lazy.)
 
 In the file `modules/datasets/dataset_bert_EC_new_roberta.py`, you can change the label definitions as follows:
 
