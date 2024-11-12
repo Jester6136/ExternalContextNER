@@ -54,7 +54,6 @@ pip install -r requirements.txt
 
 ```
 gdown --folder https://drive.google.com/drive/folders/1H0II0wMlcQ7chw4fdg95CKa07O6BC2U5 -O tmp_data
-gdown --folder https://drive.google.com/drive/folders/1RVvaoJQCHep1cE3E16ylWW9jiVXBNetf -O tmp_data
 ```
 
 
