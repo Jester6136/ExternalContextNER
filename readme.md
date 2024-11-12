@@ -85,7 +85,7 @@ python train_bert_crf_EC_new_roberta.py \
     --output_dir "./VLSP2016_img" \
     --bert_model "vinai/phobert-base-v2" \
     --learning_rate 3e-5 \
-    --data_dir "tmp_data/vlsp_MoRe_PHO_kc_image/VLSP2016" \
+    --data_dir "tmp_data/VLSP2016" \
     --num_train_epochs 12 \
     --train_batch_size 36 \
     --task_name "sonba" \
@@ -94,6 +94,3 @@ python train_bert_crf_EC_new_roberta.py \
 ```
 
 also, I wrote some example sh file for running.
-```
-sh run_vlsp2016_more_image_roberta.sh
-```
