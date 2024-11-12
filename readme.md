@@ -91,7 +91,7 @@ python train_bert_crf_EC_new_roberta.py \
     --learning_rate 3e-5 \
     --data_dir "tmp_data/VLSP2016" \
     --num_train_epochs 12 \
-    --train_batch_size 36 \
+    --train_batch_size 20 \
     --task_name "sonba" \
     --cache_dir "cache" \
     --max_seq_length 256

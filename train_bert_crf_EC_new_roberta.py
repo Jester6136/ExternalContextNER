@@ -377,11 +377,16 @@ if args.do_train:
     max_dev_f1 = 0.0
     best_dev_epoch = 0
     logger.info("***** Running training *****")
+    print("***** Running training *****")
     for train_idx in trange(int(args.num_train_epochs), desc="Epoch"):
         logger.info("********** Epoch: " + str(train_idx) + " **********")
         logger.info("  Num examples = %d", len(train_examples))
         logger.info("  Batch size = %d", args.train_batch_size)
         logger.info("  Num steps = %d", num_train_optimization_steps)
+        print("********** Epoch: " + str(train_idx) + " **********")
+        print("  Num examples = %d", len(train_examples))
+        print("  Batch size = %d", args.train_batch_size)
+        print("  Num steps = %d", num_train_optimization_steps)
         model.train()
         tr_loss = 0
         nb_tr_examples, nb_tr_steps = 0, 0
@@ -416,12 +421,16 @@ if args.do_train:
                 global_step += 1
         
         logger.info(f"===============Main loss: {tr_loss/nb_tr_steps}===============")
+        print(f"===============Main loss: {tr_loss/nb_tr_steps}===============")
 
         model.eval()
 
         logger.info("***** Running Dev evaluation *****")
         logger.info("  Num examples = %d", len(dev_eval_examples))
         logger.info("  Batch size = %d", args.eval_batch_size)
+        print("***** Running Dev evaluation *****")
+        print("  Num examples = %d", len(dev_eval_examples))
+        print("  Batch size = %d", args.eval_batch_size)
         y_true = []
         y_pred = []
         y_true_idx = []
@@ -480,6 +489,8 @@ if args.do_train:
 
         logger.info("***** Dev Eval results *****")
         logger.info("\n%s", report)
+        print("***** Dev Eval results *****")
+        print("\n%s", report)
         print("Overall: ", p, r, f1)
         F_score_dev = f1
 
@@ -517,6 +528,9 @@ if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0)
     logger.info("***** Running Test Evaluation with the Best Model on the Dev Set*****")
     logger.info("  Num examples = %d", len(eval_examples))
     logger.info("  Batch size = %d", args.eval_batch_size)
+    print("***** Running Test Evaluation with the Best Model on the Dev Set*****")
+    print("  Num examples = %d", len(eval_examples))
+    print("  Batch size = %d", args.eval_batch_size)
     all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
     all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
     all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
@@ -605,5 +619,7 @@ if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0)
     with open(output_eval_file, "w") as writer:
         logger.info("***** Test Eval results *****")
         logger.info("\n%s", report)
+        print("***** Test Eval results *****")
+        print("\n%s", report)
         writer.write(report)
         writer.write("Overall: " + str(p) + ' ' + str(r) + ' ' + str(f1) + '\n')
