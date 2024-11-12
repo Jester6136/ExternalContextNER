@@ -53,28 +53,16 @@ pip install -r requirements.txt
 ## Import data 
 
 ```
-git clone https://huggingface.co/jester6136/vlsp_external_context tmp_data
+gdown --folder https://drive.google.com/drive/folders/1H0II0wMlcQ7chw4fdg95CKa07O6BC2U5 -O tmp_data
+gdown --folder https://drive.google.com/drive/folders/1RVvaoJQCHep1cE3E16ylWW9jiVXBNetf -O tmp_data
 ```
 
 
 
-## Changing Labels in `dataset_bert_EC_new_roberta.py` (Sorry about this, it's my fault for being lazy.)
-
-In the file `modules/datasets/dataset_bert_EC_new_roberta.py`, you can change the label definitions as follows:
-
-1. Locate Label Definitions:  
-   Go to line 140 - 147, where the dataset labels are defined.
-
-2. Comment Out Unnecessary Datasets:  
-   If you’re working with a specific dataset, such as `vlsp2016`, you may want to comment out labels for other datasets. For example, you can retain only the `vlsp2016` labels.
-
-3. Example for `vlsp2016` Labels:
-   To configure for `vlsp2016`, update the return line as follows:
-
-```python
-# For vlsp2016
-return ["B-ORG", "B-MISC", "I-PER", "I-ORG", "B-LOC", "I-MISC", "I-LOC", "O", "B-PER", "E", "X", "<s>", "</s>"]
-```
+## Changing Labels in ENV:
+   vlsp2016. LABELS=["B-ORG","B-MISC","I-PER","I-ORG","B-LOC","I-MISC","I-LOC","O","B-PER","E","X","<s>","</s>"]
+   vlsp2018. LABELS=["I-ORGANIZATION","B-ORGANIZATION","I-LOCATION","B-MISCELLANEOUS","I-PERSON","O","B-PERSON","I-MISCELLANEOUS","B-LOCATION","E","X","<s>","</s>"]
+   vlsp2021. LABELS=["I-PRODUCT-AWARD","B-MISCELLANEOUS","B-QUANTITY-NUM","B-ORGANIZATION-SPORTS","B-DATETIME","I-ADDRESS","I-PERSON","I-EVENT-SPORT","B-ADDRESS","B-EVENT-NATURAL","I-LOCATION-GPE","B-EVENT-GAMESHOW","B-DATETIME-TIMERANGE","I-QUANTITY-NUM","I-QUANTITY-AGE","B-EVENT-CUL","I-QUANTITY-TEM","I-PRODUCT-LEGAL","I-LOCATION-STRUC","I-ORGANIZATION","B-PHONENUMBER","B-IP","O","B-QUANTITY-AGE","I-DATETIME-TIME","I-DATETIME","B-ORGANIZATION-MED","B-DATETIME-SET","I-EVENT-CUL","B-QUANTITY-DIM","I-QUANTITY-DIM","B-EVENT","B-DATETIME-DATERANGE","I-EVENT-GAMESHOW","B-PRODUCT-AWARD","B-LOCATION-STRUC","B-LOCATION","B-PRODUCT","I-MISCELLANEOUS","B-SKILL","I-QUANTITY-ORD","I-ORGANIZATION-STOCK","I-LOCATION-GEO","B-PERSON","B-PRODUCT-COM","B-PRODUCT-LEGAL","I-LOCATION","B-QUANTITY-TEM","I-PRODUCT","B-QUANTITY-CUR","I-QUANTITY-CUR","B-LOCATION-GPE","I-PHONENUMBER","I-ORGANIZATION-MED","I-EVENT-NATURAL","I-EMAIL","B-ORGANIZATION","B-URL","I-DATETIME-TIMERANGE","I-QUANTITY","I-IP","B-EVENT-SPORT","B-PERSONTYPE","B-QUANTITY-PER","I-QUANTITY-PER","I-PRODUCT-COM","I-DATETIME-DURATION","B-LOCATION-GPE-GEO","B-QUANTITY-ORD","I-EVENT","B-DATETIME-TIME","B-QUANTITY","I-DATETIME-SET","I-LOCATION-GPE-GEO","B-ORGANIZATION-STOCK","I-ORGANIZATION-SPORTS","I-SKILL","I-URL","B-DATETIME-DURATION","I-DATETIME-DATE","I-PERSONTYPE","B-DATETIME-DATE","I-DATETIME-DATERANGE","B-LOCATION-GEO","B-EMAIL","E","X","<s>","</s>"]
 
 ## Usage
 
@@ -83,6 +71,8 @@ return ["B-ORG", "B-MISC", "I-PER", "I-ORG", "B-LOC", "I-MISC", "I-LOC", "O", "B
 You can train the BERT-CRF model with external context using the following command:
 
 ```bash
+
+LABELS=["B-ORG","B-MISC","I-PER","I-ORG","B-LOC","I-MISC","I-LOC","O","B-PER","E","X","<s>","</s>"]
 python train_bert_crf_EC_new_roberta.py \
     --do_train \
     --do_eval \
@@ -91,7 +81,7 @@ python train_bert_crf_EC_new_roberta.py \
     --learning_rate 3e-5 \
     --data_dir "tmp_data/vlsp_MoRe_PHO_kc_image/VLSP2016" \
     --num_train_epochs 12 \
-    --train_batch_size 8 \
+    --train_batch_size 36 \
     --task_name "sonba" \
     --cache_dir "cache" \
     --max_seq_length 256

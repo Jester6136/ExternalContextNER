@@ -3,7 +3,7 @@
 
 echo "## Run"
 task_name="sonba"
-learning_rate=5e-5
+learning_rate=3e-5
 num_train_epochs=12
 train_batch_size=32
 bert_model="vinai/phobert-base-v2"
