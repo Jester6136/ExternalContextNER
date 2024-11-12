@@ -46,7 +46,7 @@ Clone the repository and install the dependencies:
 
 ```bash
 git clone https://github.com/your_username/ExternalContext.git
-cd ExternalContext
+cd ExternalContextNER
 pip install -r requirements.txt
 ```
 
@@ -97,4 +97,7 @@ python train_bert_crf_EC_new_roberta.py \
     --max_seq_length 256
 ```
 
-also, I wrote some example sh file for 
+also, I wrote some example sh file for running.
+```
+sh run_vlsp2016_more_image_roberta.sh
+```
