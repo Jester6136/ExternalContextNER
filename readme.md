@@ -53,6 +53,7 @@ pip install -r requirements.txt
 ## Import data 
 
 ```
+pip install gdown
 gdown --folder https://drive.google.com/drive/folders/1H0II0wMlcQ7chw4fdg95CKa07O6BC2U5 -O tmp_data
 ```
 
