@@ -45,7 +45,7 @@ pip install -r requirements.txt
 Clone the repository and install the dependencies:
 
 ```bash
-git clone https://github.com/your_username/ExternalContext.git
+git https://github.com/Jester6136/ExternalContextNER.git
 cd ExternalContextNER
 pip install -r requirements.txt
 ```
