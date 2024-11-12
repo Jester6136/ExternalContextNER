@@ -1,4 +1,5 @@
 import torch 
+import json
 import logging
 import os
 logger = logging.getLogger(__name__)
@@ -135,11 +136,11 @@ class MNERProcessor(DataProcessor):
         """See base class."""
         data, auxlabels = self._read_sbtsv(os.path.join(data_dir, "test.txt"))
         return self._create_examples(data, auxlabels, "test")
-
+    
     def get_labels(self):
-        print(os.getenv("LABELS"))
-        print(type(os.getenv("LABELS")))
-        return os.getenv("LABELS")
+        print(json.loads(os.getenv("LABELS")))
+        print(type(json.loads(os.getenv("LABELS"))))
+        return json.loads(os.getenv("LABELS"))
         # # For vlsp2018
         # return ["I-ORGANIZATION","B-ORGANIZATION","I-LOCATION","B-MISCELLANEOUS","I-PERSON","O","B-PERSON","I-MISCELLANEOUS","B-LOCATION","E","X","<s>","</s>"]
 
