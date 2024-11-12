@@ -137,6 +137,8 @@ class MNERProcessor(DataProcessor):
         return self._create_examples(data, auxlabels, "test")
 
     def get_labels(self):
+        print(os.getenv("LABELS"))
+        print(type(os.getenv("LABELS")))
         return os.getenv("LABELS")
         # # For vlsp2018
         # return ["I-ORGANIZATION","B-ORGANIZATION","I-LOCATION","B-MISCELLANEOUS","I-PERSON","O","B-PERSON","I-MISCELLANEOUS","B-LOCATION","E","X","<s>","</s>"]
@@ -149,9 +151,6 @@ class MNERProcessor(DataProcessor):
 
     def get_auxlabels(self):
         return ["O", "B", "I","E", "X", "<s>", "</s>"]
-
-
-
 
     def get_start_label_id(self):
         label_list = self.get_labels()
