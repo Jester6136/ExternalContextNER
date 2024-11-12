@@ -150,6 +150,9 @@ class MNERProcessor(DataProcessor):
     def get_auxlabels(self):
         return ["O", "B", "I","E", "X", "<s>", "</s>"]
 
+
+
+
     def get_start_label_id(self):
         label_list = self.get_labels()
         label_map = {label: i for i, label in enumerate(label_list, 1)}
