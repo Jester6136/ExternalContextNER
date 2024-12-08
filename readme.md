@@ -57,8 +57,6 @@ pip install gdown
 gdown --folder https://drive.google.com/drive/folders/1H0II0wMlcQ7chw4fdg95CKa07O6BC2U5 -O tmp_data
 ```
 
-
-
 ## Changing Labels in ENV:
    #### For vlsp2016
    ```
@@ -83,18 +81,50 @@ You can train the BERT-CRF model with external context using the following comma
 ```bash
 
 export LABELS="B-ORG,B-MISC,I-PER,I-ORG,B-LOC,I-MISC,I-LOC,O,B-PER,E,X,<s>,</s>"
-python train_bert_crf_EC_new_roberta.py \
+python train_bert_crf_EC_new_roberta_more.py \
     --do_train \
     --do_eval \
-    --output_dir "./VLSP2016_img" \
+    --output_dir "./VLSP2016_img_test" \
     --bert_model "vinai/phobert-base-v2" \
-    --learning_rate 3e-5 \
+    --learning_rate 5e-5 \
     --data_dir "tmp_data/VLSP2016" \
-    --num_train_epochs 12 \
-    --train_batch_size 20 \
+    --data_dir2 "tmp_data/VLSP2016" \
+    --num_train_epochs 8 \
+    --train_batch_size 10 \
     --task_name "sonba" \
     --cache_dir "cache" \
     --max_seq_length 256
 ```
 
 also, I wrote some example sh file for running.
+
+
+
+export LABELS="I-PRODUCT-AWARD,B-MISCELLANEOUS,B-QUANTITY-NUM,B-ORGANIZATION-SPORTS,B-DATETIME,I-ADDRESS,I-PERSON,I-EVENT-SPORT,B-ADDRESS,B-EVENT-NATURAL,I-LOCATION-GPE,B-EVENT-GAMESHOW,B-DATETIME-TIMERANGE,I-QUANTITY-NUM,I-QUANTITY-AGE,B-EVENT-CUL,I-QUANTITY-TEM,I-PRODUCT-LEGAL,I-LOCATION-STRUC,I-ORGANIZATION,B-PHONENUMBER,B-IP,O,B-QUANTITY-AGE,I-DATETIME-TIME,I-DATETIME,B-ORGANIZATION-MED,B-DATETIME-SET,I-EVENT-CUL,B-QUANTITY-DIM,I-QUANTITY-DIM,B-EVENT,B-DATETIME-DATERANGE,I-EVENT-GAMESHOW,B-PRODUCT-AWARD,B-LOCATION-STRUC,B-LOCATION,B-PRODUCT,I-MISCELLANEOUS,B-SKILL,I-QUANTITY-ORD,I-ORGANIZATION-STOCK,I-LOCATION-GEO,B-PERSON,B-PRODUCT-COM,B-PRODUCT-LEGAL,I-LOCATION,B-QUANTITY-TEM,I-PRODUCT,B-QUANTITY-CUR,I-QUANTITY-CUR,B-LOCATION-GPE,I-PHONENUMBER,I-ORGANIZATION-MED,I-EVENT-NATURAL,I-EMAIL,B-ORGANIZATION,B-URL,I-DATETIME-TIMERANGE,I-QUANTITY,I-IP,B-EVENT-SPORT,B-PERSONTYPE,B-QUANTITY-PER,I-QUANTITY-PER,I-PRODUCT-COM,I-DATETIME-DURATION,B-LOCATION-GPE-GEO,B-QUANTITY-ORD,I-EVENT,B-DATETIME-TIME,B-QUANTITY,I-DATETIME-SET,I-LOCATION-GPE-GEO,B-ORGANIZATION-STOCK,I-ORGANIZATION-SPORTS,I-SKILL,I-URL,B-DATETIME-DURATION,I-DATETIME-DATE,I-PERSONTYPE,B-DATETIME-DATE,I-DATETIME-DATERANGE,B-LOCATION-GEO,B-EMAIL,E,X,<s>,</s>"
+python train_bert_crf_EC_new_roberta.py \
+    --do_train \
+    --do_eval \
+    --output_dir "./VLSP2021_img" \
+    --bert_model "vinai/phobert-base-v2" \
+    --learning_rate 3e-5 \
+    --data_dir "tmp_data/VLSP2021" \
+    --num_train_epochs 8 \
+    --train_batch_size 16 \
+    --task_name "sonba" \
+    --cache_dir "cache" \
+    --max_seq_length 256
+
+
+export LABELS="I-ORGANIZATION,B-ORGANIZATION,I-LOCATION,B-MISCELLANEOUS,I-PERSON,O,B-PERSON,I-MISCELLANEOUS,B-LOCATION,E,X,<s>,</s>"
+python train_bert_crf_EC_new_roberta.py \
+    --do_train \
+    --do_eval \
+    --output_dir "./VLSP2018_img" \
+    --bert_model "vinai/phobert-base-v2" \
+    --learning_rate 3e-5 \
+    --data_dir "tmp_data/VLSP2018" \
+    --num_train_epochs 8 \
+    --train_batch_size 16 \
+    --task_name "sonba" \
+    --cache_dir "cache" \
+    --max_seq_length 256
