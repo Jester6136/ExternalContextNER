@@ -3,6 +3,9 @@ import json
 import logging
 import os
 from PIL import Image
+import requests
+import torch
+from transformers import CLIPProcessor, CLIPModel
 logger = logging.getLogger(__name__)
 SPECIAL_TOKENS = ['\ufe0f', '\u200d', '\u200b', '\x92']
 URL_PREFIX = 'http'
@@ -30,6 +33,27 @@ class SBInputExample(object):
         # it is just kept in order not to modify the original code
         self.auxlabel = auxlabel
 
+class SBInputExampleText(object):
+    """A single training/test example for simple sequence classification."""
+    def __init__(self,guid,text_a,text_b,label=None,auxlabel=None):
+        """Constructs a InputExample.
+
+        Args:
+            guid: Unique id for the example.
+            text_a: string. The untokenized text of the first sequence. For single
+            sequence tasks, only this sequence must be specified.
+            text_b: (Optional) string. The untokenized text of the second sequence.
+            Only must be specified for sequence pair tasks.
+            label: (Optional) string. The label of the example. This should be
+            specified for train and dev examples, but not for test examples.
+        """
+        self.guid = guid
+        self.text_a=text_a
+        self.text_b=text_b
+        self.label = label
+        # Please note that the auxlabel is not used in SB
+        # it is just kept in order not to modify the original code
+        self.auxlabel = auxlabel
 class SBInputFeatures(object):
     """A single set of features of data"""
 
@@ -41,6 +65,20 @@ class SBInputFeatures(object):
         self.input_mask2 = input_mask2
         self.segment_ids2 = segment_ids2
         self.img_feat = img_feat
+        self.label_id = label_id
+        self.label_id2 = label_id2
+        self.auxlabel_id = auxlabel_id
+
+class SBInputFeaturesText(object):
+    """A single set of features of data"""
+
+    def __init__(self,input_ids,input_mask,segment_ids,input_ids2,input_mask2,segment_ids2,label_id,label_id2,auxlabel_id):
+        self.input_ids = input_ids
+        self.input_mask = input_mask
+        self.segment_ids = segment_ids
+        self.input_ids2 = input_ids2
+        self.input_mask2 = input_mask2
+        self.segment_ids2 = segment_ids2
         self.label_id = label_id
         self.label_id2 = label_id2
         self.auxlabel_id = auxlabel_id
@@ -133,8 +171,18 @@ class MNERProcessor(DataProcessor):
         """See base class."""
         data, imgs, auxlabels = self._read_sbtsv(os.path.join(data_dir, "train.txt"))
         return self._create_examples(data, imgs, auxlabels, "train")
+    
+    def get_train_examples_text(self, data_dir):
+        """See base class."""
+        data, imgs, auxlabels = self._read_sbtsv(os.path.join(data_dir, "train.txt"))
+        return self._create_examples(data, imgs, auxlabels, "train")
 
     def get_dev_examples(self, data_dir):
+        """See base class."""
+        data, imgs, auxlabels = self._read_sbtsv(os.path.join(data_dir, "dev.txt"))
+        return self._create_examples(data, imgs, auxlabels, "dev")
+    
+    def get_dev_examples_text(self, data_dir):
         """See base class."""
         data, imgs, auxlabels = self._read_sbtsv(os.path.join(data_dir, "dev.txt"))
         return self._create_examples(data, imgs, auxlabels, "dev")
@@ -170,17 +218,159 @@ class MNERProcessor(DataProcessor):
 
     def _create_examples(self, lines, imgs, auxlabels, set_type):
         examples = []
-        for i, (sentence, label) in enumerate(lines):
-            guid = "%s-%s" % (set_type, i)
-            text_a = ' '.join(sentence)
-            text_b = None
-            label = label
-            img_id = imgs[i]
-            auxlabel = auxlabels[i]
-            examples.append(
-                SBInputExample(guid=guid, text_a=text_a, text_b=text_b, img_id=img_id, label=label, auxlabel=auxlabel))
+        if imgs == []:
+            for i, (sentence, label) in enumerate(lines):
+                guid = "%s-%s" % (set_type, i)
+                text_a = ' '.join(sentence)
+                text_b = None
+                label = label
+                auxlabel = auxlabels[i]
+                examples.append(
+                    SBInputExampleText(guid=guid, text_a=text_a, text_b=text_b, label=label, auxlabel=auxlabel))
+        else:
+            for i, (sentence, label) in enumerate(lines):
+                guid = "%s-%s" % (set_type, i)
+                text_a = ' '.join(sentence)
+                text_b = None
+                label = label
+                img_id = imgs[i]
+                auxlabel = auxlabels[i]
+                examples.append(
+                    SBInputExample(guid=guid, text_a=text_a, text_b=text_b, img_id=img_id, label=label, auxlabel=auxlabel))
         return examples
 
+
+def convert_mm_examples_to_features_text(examples, label_list, auxlabel_list,
+ max_seq_length, tokenizer):
+
+    label_map = {label: i for i, label in enumerate(label_list, 1)}
+    auxlabel_map = {label: i for i, label in enumerate(auxlabel_list, 1)}
+
+    features = []
+    count = 0
+
+    for (ex_index, example) in enumerate(examples):
+        textlist = example.text_a.split(' ')
+        labellist = example.label
+        auxlabellist = example.auxlabel
+        tokens = []
+        labels = []
+        auxlabels = []
+        for i, word in enumerate(textlist):
+            token = tokenizer.tokenize(word)
+            tokens.extend(token)
+            label_1 = labellist[i]
+            auxlabel_1 = auxlabellist[i]
+            for m in range(len(token)):
+                if m == 0:
+                    labels.append(label_1)
+                    auxlabels.append(auxlabel_1)
+                else:
+                    labels.append("X")
+                    auxlabels.append("X")
+        if len(tokens) >= max_seq_length - 1:
+            tokens = tokens[0:(max_seq_length - 2)]
+            labels = labels[0:(max_seq_length - 2)]
+            auxlabels = auxlabels[0:(max_seq_length - 2)]
+        ntokens = []
+        segment_ids = []
+        label_ids = []
+
+        ntokens2 = []
+        segment_ids2 = []
+        label_ids2 = []
+
+        auxlabel_ids = []
+        ntokens.append("<s>")
+        segment_ids.append(0)
+        label_ids.append(label_map["<s>"])
+        auxlabel_ids.append(auxlabel_map["<s>"])
+
+        segment = 0
+        flag = True
+        for i, token in enumerate(tokens):
+            if token != "</s>" and flag:
+                ntokens.append(token)
+                segment_ids.append(segment)
+                label_ids.append(label_map[labels[i]])
+                auxlabel_ids.append(auxlabel_map[auxlabels[i]])
+                ntokens2.append(token)
+                segment_ids2.append(0)
+                label_ids2.append(label_map[labels[i]])
+            elif token != "</s>" and not flag:
+                ntokens.append(token)
+                segment_ids.append(segment)
+                label_ids.append(label_map[labels[i]])
+                auxlabel_ids.append(auxlabel_map[auxlabels[i]])
+            elif token == "</s>":
+                ntokens.append(token)
+                segment_ids.append(segment)
+                label_ids.append(label_map[labels[i]])
+                auxlabel_ids.append(auxlabel_map[auxlabels[i]])
+                segment+=1
+                flag = False
+
+        ntokens.append("</s>")
+        segment_ids.append(segment)
+        label_ids.append(label_map["</s>"])
+        auxlabel_ids.append(auxlabel_map["</s>"])
+
+        ntokens2.append("</s>")
+        segment_ids2.append(0)
+        label_ids2.append(label_map["</s>"])
+
+        input_ids = tokenizer.convert_tokens_to_ids(ntokens)
+        input_mask = [1] * len(input_ids)
+        input_ids2 = tokenizer.convert_tokens_to_ids(ntokens2)
+        input_mask2 = [1] * len(input_ids2)
+
+        while len(input_ids) < max_seq_length:
+            input_ids.append(1)
+            input_mask.append(0)
+            segment_ids.append(segment)
+            label_ids.append(0)
+            auxlabel_ids.append(0)
+
+        while len(input_ids2) < max_seq_length:
+            input_ids2.append(1)
+            input_mask2.append(0)
+            segment_ids2.append(0)
+            label_ids2.append(0)
+
+        assert len(input_ids) == max_seq_length
+        assert len(input_mask) == max_seq_length
+        assert len(segment_ids) == max_seq_length
+        assert len(label_ids) == max_seq_length
+        
+        assert len(input_ids2) == max_seq_length
+        assert len(input_mask2) == max_seq_length
+        assert len(segment_ids2) == max_seq_length
+        assert len(label_ids2) == max_seq_length
+
+        assert len(auxlabel_ids) == max_seq_length
+
+
+        if ex_index < 2:
+            logger.info("*** Example ***")
+            logger.info("guid: %s" % (example.guid))
+            logger.info("tokens: %s" % " ".join(
+                [str(x) for x in tokens]))
+            logger.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
+            logger.info("input_ids2: %s" % " ".join([str(x) for x in input_ids2]))
+            logger.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
+            logger.info("input_mask2: %s" % " ".join([str(x) for x in input_mask2]))
+            logger.info("segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
+            logger.info("segment_ids2: %s" % " ".join([str(x) for x in segment_ids2]))
+            logger.info("label: %s" % " ".join([str(x) for x in label_ids]))
+            logger.info("label_ids2: %s" % " ".join([str(x) for x in label_ids2]))
+            logger.info("auxlabel: %s" % " ".join([str(x) for x in auxlabel_ids]))
+
+        features.append(
+            SBInputFeaturesText(input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids,input_ids2=input_ids2, input_mask2=input_mask2, segment_ids2=segment_ids2,
+                label_id=label_ids, label_id2=label_ids2, auxlabel_id=auxlabel_ids))
+
+    print('the number of problematic samples: ' + str(count))
+    return features
 
 def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
  max_seq_length, tokenizer, path_img):
@@ -192,6 +382,12 @@ def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
     count = 0
     from transformers import CLIPProcessor
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", cache_dir='cache')# Load the image
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32", cache_dir='cache').to(device)
+    image_path_fail = os.path.join(path_img, 'background.jpg')
+    inputs_image_path_fail = processor(images=image_path_fail, return_tensors="pt", padding=True)
+    inputs_image_path_fail = {key: value.to(device) for key, value in inputs_image_path_fail.items()}
+    image_path_fail_features = model.get_image_features(**inputs_image_path_fail)
 
     for (ex_index, example) in enumerate(examples):
         textlist = example.text_a.split(' ')
@@ -299,11 +495,12 @@ def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
             if 'NaN' not in image_path:
                 print(image_path)
         try:
-            image = processor(images=image_path, return_tensors="pt", padding=True)
+            input_image = processor(images=image_path, return_tensors="pt", padding=True)
+            input_image = {key: value.to(device) for key, value in input_image.items()}
+            img_feat = model.get_image_features(**input_image)
         except:
             count += 1
-            image_path_fail = os.path.join(path_img, 'background.jpg')
-            image = processor(images=image_path_fail, return_tensors="pt", padding=True)
+            img_feat = image_path_fail_features
 
         if ex_index < 2:
             logger.info("*** Example ***")
@@ -321,7 +518,7 @@ def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
             logger.info("auxlabel: %s" % " ".join([str(x) for x in auxlabel_ids]))
 
         features.append(
-            SBInputFeatures(input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids,input_ids2=input_ids2, input_mask2=input_mask2, segment_ids2=segment_ids2, img_feat=image, label_id=label_ids, label_id2=label_ids2, auxlabel_id=auxlabel_ids))
+            SBInputFeatures(input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids,input_ids2=input_ids2, input_mask2=input_mask2, segment_ids2=segment_ids2, img_feat=img_feat, label_id=label_ids, label_id2=label_ids2, auxlabel_id=auxlabel_ids))
 
     print('the number of problematic samples: ' + str(count))
     return features
