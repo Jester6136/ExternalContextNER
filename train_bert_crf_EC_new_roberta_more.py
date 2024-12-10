@@ -362,40 +362,41 @@ if args.do_train:
         train_features2 = convert_mm_examples_to_features(
             train_examples_img, label_list, auxlabel_list, args.max_seq_length, tokenizer, args.path_image, image_feat_model)
         
+        all_input_ids_img = torch.tensor([f.input_ids for f in train_features2], dtype=torch.long)
+        all_input_mask_img = torch.tensor([f.input_mask for f in train_features2], dtype=torch.long)
+        all_segment_ids_img = torch.tensor([f.segment_ids for f in train_features2], dtype=torch.long)
+        all_label_ids_img = torch.tensor([f.label_id for f in train_features2], dtype=torch.long)
         
-        all_input_ids_2 = torch.tensor([f.input_ids for f in train_features2], dtype=torch.long)
-        all_input_mask_2 = torch.tensor([f.input_mask for f in train_features2], dtype=torch.long)
-        all_segment_ids_2 = torch.tensor([f.segment_ids for f in train_features2], dtype=torch.long)
-        all_label_ids_2 = torch.tensor([f.label_id for f in train_features2], dtype=torch.long)
         all_img_feats = torch.stack([f.img_feat for f in train_features2])
-        all_input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long)
-        all_input_ids2 = torch.tensor([f.input_ids2 for f in train_features], dtype=torch.long)
-        all_input_mask2 = torch.tensor([f.input_mask2 for f in train_features], dtype=torch.long)
-        all_segment_ids2 = torch.tensor([f.segment_ids2 for f in train_features], dtype=torch.long)
-        all_label_ids = torch.tensor([f.label_id for f in train_features], dtype=torch.long)
-        all_label_ids2 = torch.tensor([f.label_id2 for f in train_features], dtype=torch.long)
+        
+        all_input_ids_text = torch.tensor([f.input_ids for f in train_features], dtype=torch.long)
+        all_input_mask_text = torch.tensor([f.input_mask for f in train_features], dtype=torch.long)
+        all_segment_ids_text = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long)
+        all_input_ids_origin = torch.tensor([f.input_ids2 for f in train_features], dtype=torch.long)
+        all_input_mask_origin = torch.tensor([f.input_mask2 for f in train_features], dtype=torch.long)
+        all_segment_ids_origin = torch.tensor([f.segment_ids2 for f in train_features], dtype=torch.long)
+        all_label_ids_text = torch.tensor([f.label_id for f in train_features], dtype=torch.long)
+        all_label_ids_origin = torch.tensor([f.label_id2 for f in train_features], dtype=torch.long)
 
-        train_data = TensorDataset(all_input_ids, all_input_mask,all_segment_ids, all_input_ids_2, all_input_mask_2, all_segment_ids_2, all_input_ids2, all_input_mask2,all_segment_ids2, all_img_feats, all_label_ids, all_label_ids_2,all_label_ids2)
+        train_data = TensorDataset(all_input_ids_text, all_input_mask_text,all_segment_ids_text, all_input_ids_img, all_input_mask_img, all_segment_ids_img, all_input_ids_origin, all_input_mask_origin,all_segment_ids_origin, all_img_feats, all_label_ids_text, all_label_ids_img,all_label_ids_origin)
         # Saving the train_data (TensorDataset)
         
-        del all_input_ids_2
-        del all_input_mask_2 
-        del all_segment_ids_2
-        del all_label_ids_2
+        del all_input_ids_img
+        del all_input_mask_img 
+        del all_segment_ids_img
+        del all_label_ids_img
         del all_img_feats
-        del all_input_ids
-        del all_input_mask
-        del all_segment_ids
-        del all_input_ids2 
-        del all_input_mask2 
-        del all_segment_ids2
-        del all_label_ids
-        del all_label_ids2
+        del all_input_ids_text
+        del all_input_mask_text
+        del all_segment_ids_text
+        del all_input_ids_origin 
+        del all_input_mask_origin 
+        del all_segment_ids_origin
+        del all_label_ids_text
+        del all_label_ids_origin
         torch.save(train_data, train_dataloader_save_path)
     else:
-        # Loading the train_data (TensorDataset)
+        print("Loading the train_data (TensorDataset)")
         train_data = torch.load(train_dataloader_save_path, weights_only=False)
     
     if args.local_rank == -1:
@@ -414,37 +415,41 @@ if args.do_train:
         dev_eval_features2 = convert_mm_examples_to_features(
             dev_eval_examples2, label_list, auxlabel_list, args.max_seq_length, tokenizer, args.path_image, image_feat_model)
         
-        all_input_ids_2 = torch.tensor([f.input_ids for f in dev_eval_features2], dtype=torch.long)
-        all_input_mask_2 = torch.tensor([f.input_mask for f in dev_eval_features2], dtype=torch.long)
-        all_segment_ids_2 = torch.tensor([f.segment_ids for f in dev_eval_features2], dtype=torch.long)
-        all_label_ids_2 = torch.tensor([f.label_id for f in dev_eval_features2], dtype=torch.long)
+        all_input_ids_img = torch.tensor([f.input_ids for f in dev_eval_features2], dtype=torch.long)
+        all_input_mask_img = torch.tensor([f.input_mask for f in dev_eval_features2], dtype=torch.long)
+        all_segment_ids_img = torch.tensor([f.segment_ids for f in dev_eval_features2], dtype=torch.long)
+        all_label_ids_img = torch.tensor([f.label_id for f in dev_eval_features2], dtype=torch.long)
+        
         all_img_feats = torch.stack([f.img_feat for f in dev_eval_features2])
-        all_input_ids = torch.tensor([f.input_ids for f in dev_eval_features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in dev_eval_features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in dev_eval_features], dtype=torch.long)
-        all_input_ids2 = torch.tensor([f.input_ids2 for f in dev_eval_features], dtype=torch.long)
-        all_input_mask2 = torch.tensor([f.input_mask2 for f in dev_eval_features], dtype=torch.long)
-        all_segment_ids2 = torch.tensor([f.segment_ids2 for f in dev_eval_features], dtype=torch.long)
-        all_label_ids = torch.tensor([f.label_id for f in dev_eval_features], dtype=torch.long)
-        all_label_ids2 = torch.tensor([f.label_id2 for f in dev_eval_features], dtype=torch.long)
+        
+        all_input_ids_text = torch.tensor([f.input_ids for f in dev_eval_features], dtype=torch.long)
+        all_input_mask_text = torch.tensor([f.input_mask for f in dev_eval_features], dtype=torch.long)
+        all_segment_ids_text = torch.tensor([f.segment_ids for f in dev_eval_features], dtype=torch.long)
+        all_input_ids_origin = torch.tensor([f.input_ids2 for f in dev_eval_features], dtype=torch.long)
+        all_input_mask_origin = torch.tensor([f.input_mask2 for f in dev_eval_features], dtype=torch.long)
+        all_segment_ids_origin = torch.tensor([f.segment_ids2 for f in dev_eval_features], dtype=torch.long)
+        all_label_ids_text = torch.tensor([f.label_id for f in dev_eval_features], dtype=torch.long)
+        all_label_ids_origin = torch.tensor([f.label_id2 for f in dev_eval_features], dtype=torch.long)
 
-        dev_eval_data = TensorDataset(all_input_ids, all_input_mask,all_segment_ids, all_input_ids_2, all_input_mask_2, all_segment_ids_2, all_input_ids2, all_input_mask2,all_segment_ids2, all_img_feats, all_label_ids, all_label_ids_2,all_label_ids2)
-        del all_input_ids_2
-        del all_input_mask_2 
-        del all_segment_ids_2
-        del all_label_ids_2
+
+            
+        dev_eval_data = TensorDataset(all_input_ids_text, all_input_mask_text,all_segment_ids_text, all_input_ids_img, all_input_mask_img, all_segment_ids_img, all_input_ids_origin, all_input_mask_origin,all_segment_ids_origin, all_img_feats, all_label_ids_text, all_label_ids_img,all_label_ids_origin)
+        del all_input_ids_img
+        del all_input_mask_img 
+        del all_segment_ids_img
+        del all_label_ids_img
         del all_img_feats
-        del all_input_ids
-        del all_input_mask
-        del all_segment_ids
-        del all_input_ids2 
-        del all_input_mask2 
-        del all_segment_ids2
-        del all_label_ids
-        del all_label_ids2
+        del all_input_ids_text
+        del all_input_mask_text
+        del all_segment_ids_text
+        del all_input_ids_origin 
+        del all_input_mask_origin 
+        del all_segment_ids_origin
+        del all_label_ids_text
+        del all_label_ids_origin
         torch.save(dev_eval_data, dev_dataloader_save_path)
     else:
-        
+        print("Loading the dev_dataloader_save_path (TensorDataset)")
         dev_eval_data = torch.load(dev_dataloader_save_path, weights_only=False)
     # Run prediction for full data
     dev_eval_sampler = SequentialSampler(dev_eval_data)
@@ -469,31 +474,9 @@ if args.do_train:
         for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
             batch = tuple(t.to(device) for t in batch)
 
-            input_ids_text, segment_ids_text, input_mask_text, input_ids_img, segment_ids_img, input_mask_img, input_ids_origin, segment_ids_origin, input_mask_origin, image_features, labels_text, labels_img, labels_origin = batch
-            import pickle
-
-            # Collect parameters into a dictionary
-            params = {
-                "input_ids_text": input_ids_text,
-                "segment_ids_text": segment_ids_text,
-                "input_mask_text": input_mask_text,
-                "input_ids_img": input_ids_img,
-                "segment_ids_img": segment_ids_img,
-                "input_mask_img": input_mask_img,
-                "input_ids_origin": input_ids_origin,
-                "segment_ids_origin": segment_ids_origin,
-                "input_mask_origin": input_mask_origin,
-                "image_features": image_features,
-                "labels_text": labels_text,
-                "labels_img": labels_img,
-                "labels_origin": labels_origin,
-            }
-
-            # Save the parameters to a pickle file
-            with open("params.pkl", "wb") as file:
-                pickle.dump(params, file)
+            input_ids_text, input_mask_text, segment_ids_text, input_ids_img, input_mask_img, segment_ids_img, input_ids_origin, input_mask_origin, segment_ids_origin, image_features, labels_text, labels_img, labels_origin = batch
+            
             neg_log_likelihood = model(input_ids_text, segment_ids_text, input_mask_text, input_ids_img, segment_ids_img, input_mask_img, input_ids_origin, segment_ids_origin, input_mask_origin, image_features, labels_text, labels_img, labels_origin)
-            sys.exit()
             if n_gpu > 1:
                 neg_log_likelihood = neg_log_likelihood.mean()  # mean() to average on multi-gpu.
             if args.gradient_accumulation_steps > 1:
@@ -537,7 +520,7 @@ if args.do_train:
         y_pred_idx = []
         label_map = {i: label for i, label in enumerate(label_list, 1)}
         label_map[0] = "pad"
-        for input_ids_text, segment_ids_text, input_mask_text, input_ids_img, segment_ids_img, input_mask_img, input_ids_origin, segment_ids_origin, input_mask_origin, image_features, labels_text, labels_img, labels_origin in tqdm(
+        for input_ids_text, input_mask_text, segment_ids_text, input_ids_img, input_mask_img, segment_ids_img, input_ids_origin, input_mask_origin, segment_ids_origin, image_features, labels_text, labels_img, labels_origin in tqdm(
                 dev_eval_dataloader,
                 desc="Evaluating"):
             
@@ -645,20 +628,20 @@ if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0)
     print("***** Running Test Evaluation with the Best Model on the Test Set*****")
     print("  Num examples = %d", len(eval_examples))
     print("  Batch size = %d", args.eval_batch_size)
-    all_input_ids_2 = torch.tensor([f.input_ids for f in eval_features2], dtype=torch.long)
-    all_input_mask_2 = torch.tensor([f.input_mask for f in eval_features2], dtype=torch.long)
-    all_segment_ids_2 = torch.tensor([f.segment_ids for f in eval_features2], dtype=torch.long)
-    all_label_ids_2 = torch.tensor([f.label_id for f in eval_features2], dtype=torch.long)
+    all_input_ids_img = torch.tensor([f.input_ids for f in eval_features2], dtype=torch.long)
+    all_input_mask_img = torch.tensor([f.input_mask for f in eval_features2], dtype=torch.long)
+    all_segment_ids_img = torch.tensor([f.segment_ids for f in eval_features2], dtype=torch.long)
+    all_label_ids_img = torch.tensor([f.label_id for f in eval_features2], dtype=torch.long)
     all_img_feats = torch.stack([f.img_feat for f in eval_features2])
-    all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-    all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-    all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
-    all_input_ids2 = torch.tensor([f.input_ids2 for f in eval_features], dtype=torch.long)
-    all_input_mask2 = torch.tensor([f.input_mask2 for f in eval_features], dtype=torch.long)
-    all_segment_ids2 = torch.tensor([f.segment_ids2 for f in eval_features], dtype=torch.long)
-    all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
-    all_label_ids2 = torch.tensor([f.label_id2 for f in eval_features], dtype=torch.long)
-    eval_data = TensorDataset(all_input_ids, all_input_mask,all_segment_ids, all_input_ids_2, all_input_mask_2, all_segment_ids_2, all_input_ids2, all_input_mask2,all_segment_ids2, all_img_feats, all_label_ids, all_label_ids_2,all_label_ids2)
+    all_input_ids_text = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+    all_input_mask_text = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+    all_segment_ids_text = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+    all_input_ids_origin = torch.tensor([f.input_ids2 for f in eval_features], dtype=torch.long)
+    all_input_mask_origin = torch.tensor([f.input_mask2 for f in eval_features], dtype=torch.long)
+    all_segment_ids_origin = torch.tensor([f.segment_ids2 for f in eval_features], dtype=torch.long)
+    all_label_ids_text = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
+    all_label_ids_origin = torch.tensor([f.label_id2 for f in eval_features], dtype=torch.long)
+    eval_data = TensorDataset(all_input_ids_text, all_input_mask_text,all_segment_ids_text, all_input_ids_img, all_input_mask_img, all_segment_ids_img, all_input_ids_origin, all_input_mask_origin,all_segment_ids_origin, all_img_feats, all_label_ids_text, all_label_ids_img,all_label_ids_origin)
     # Run prediction for full data
     eval_sampler = SequentialSampler(eval_data)
     eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
@@ -671,7 +654,8 @@ if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0)
     y_pred_idx = []
     label_map = {i: label for i, label in enumerate(label_list, 1)}
     label_map[0] = "pad"
-    for input_ids_text, segment_ids_text, input_mask_text, input_ids_img, segment_ids_img, input_mask_img, input_ids_origin, segment_ids_origin, input_mask_origin, image_features, labels_text, labels_img, labels_origin in tqdm(
+    
+    for input_ids_text, input_mask_text, segment_ids_text, input_ids_img, input_mask_img, segment_ids_img, input_ids_origin, input_mask_origin, segment_ids_origin, image_features, labels_text, labels_img, labels_origin in tqdm(
             eval_dataloader, desc="Evaluating"):
     
         input_ids_text = input_ids_text.to(device)

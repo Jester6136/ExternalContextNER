@@ -180,7 +180,8 @@ class Roberta_token_classification(RobertaPreTrainedModel):
         super(Roberta_token_classification, self).__init__(config)
         self.num_labels = num_labels_
         self.roberta = RobertaModel(config)  # Text Encoder
-        self.dropout = WordDropout(config.hidden_dropout_prob)
+        # self.dropout = WordDropout(config.hidden_dropout_prob)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.linear = nn.Linear(config.hidden_size + 512, config.hidden_size)
         # Initialize the MoE Layer
         self.moe = MoELayer(
@@ -240,9 +241,6 @@ class Roberta_token_classification(RobertaPreTrainedModel):
         combined_probabilities = (
             p_T_expanded * probabilities_text + p_I_expanded * probabilities_img
         )  # Shape: [batch_size, seq_len, num_labels]
-            
-        print(combined_probabilities.shape)
-        print(labels_img.shape)
         # Decoding with CRF
         if labels_img is not None:
             loss = -self.crf(combined_probabilities, labels_img, mask=input_mask_img.byte(), reduction="mean")
