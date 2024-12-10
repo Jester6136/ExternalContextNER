@@ -404,11 +404,11 @@ if args.do_train:
     else:
         train_sampler = DistributedSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size)
-        
+    
+    
+    dev_eval_examples = processor.get_dev_examples_text(args.data_dir)
+    dev_eval_examples2 = processor.get_dev_examples(args.data_dir2)
     if not os.path.exists(dev_dataloader_save_path):
-        dev_eval_examples = processor.get_dev_examples_text(args.data_dir)
-        dev_eval_examples2 = processor.get_dev_examples(args.data_dir2)
-
         dev_eval_features = convert_mm_examples_to_features_text(
             dev_eval_examples, label_list, auxlabel_list, args.max_seq_length, tokenizer)
         
