@@ -4,8 +4,8 @@ import logging
 import os
 from PIL import Image
 import requests
+import gc
 import torch
-from transformers import CLIPProcessor, CLIPModel
 logger = logging.getLogger(__name__)
 SPECIAL_TOKENS = ['\ufe0f', '\u200d', '\u200b', '\x92']
 URL_PREFIX = 'http'
@@ -107,7 +107,7 @@ def sbreadfile(filename,do_lower=False):
         if line[0] == "\n":
             if len(sentence) > 0:
                 data.append((sentence, label))
-                imgs.append(imgid)
+                if imgid!='': imgs.append(imgid)
                 auxlabels.append(auxlabel)
                 sentence = []
                 label = []
@@ -188,6 +188,11 @@ class MNERProcessor(DataProcessor):
         return self._create_examples(data, imgs, auxlabels, "dev")
 
     def get_test_examples(self, data_dir):
+        """See base class."""
+        data, imgs, auxlabels = self._read_sbtsv(os.path.join(data_dir, "test.txt"))
+        return self._create_examples(data, imgs, auxlabels, "test")
+    
+    def get_test_examples_text(self, data_dir):
         """See base class."""
         data, imgs, auxlabels = self._read_sbtsv(os.path.join(data_dir, "test.txt"))
         return self._create_examples(data, imgs, auxlabels, "test")
@@ -373,7 +378,7 @@ def convert_mm_examples_to_features_text(examples, label_list, auxlabel_list,
     return features
 
 def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
- max_seq_length, tokenizer, path_img):
+ max_seq_length, tokenizer, path_img, image_feat_model):
 
     label_map = {label: i for i, label in enumerate(label_list, 1)}
     auxlabel_map = {label: i for i, label in enumerate(auxlabel_list, 1)}
@@ -383,11 +388,11 @@ def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
     from transformers import CLIPProcessor
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", cache_dir='cache')# Load the image
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32", cache_dir='cache').to(device)
     image_path_fail = os.path.join(path_img, 'background.jpg')
+    image_path_fail = Image.open(image_path_fail)
     inputs_image_path_fail = processor(images=image_path_fail, return_tensors="pt", padding=True)
     inputs_image_path_fail = {key: value.to(device) for key, value in inputs_image_path_fail.items()}
-    image_path_fail_features = model.get_image_features(**inputs_image_path_fail)
+    image_path_fail_features = image_feat_model.get_image_features(**inputs_image_path_fail)
 
     for (ex_index, example) in enumerate(examples):
         textlist = example.text_a.split(' ')
@@ -493,11 +498,13 @@ def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
         image_path = os.path.join(path_img, image_name)
         if not os.path.exists(image_path):
             if 'NaN' not in image_path:
-                print(image_path)
+                pass
+                # print(image_path)
         try:
+            image_path = Image.open(image_path)
             input_image = processor(images=image_path, return_tensors="pt", padding=True)
             input_image = {key: value.to(device) for key, value in input_image.items()}
-            img_feat = model.get_image_features(**input_image)
+            img_feat = image_feat_model.get_image_features(**input_image)
         except:
             count += 1
             img_feat = image_path_fail_features
@@ -519,6 +526,11 @@ def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
 
         features.append(
             SBInputFeatures(input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids,input_ids2=input_ids2, input_mask2=input_mask2, segment_ids2=segment_ids2, img_feat=img_feat, label_id=label_ids, label_id2=label_ids2, auxlabel_id=auxlabel_ids))
+
+    del inputs_image_path_fail
+    del image_path_fail_features
+    gc.collect()  # Trigger garbage collection to release unused memory
+    torch.cuda.empty_cache()  # Clear cached GPU memory
 
     print('the number of problematic samples: ' + str(count))
     return features

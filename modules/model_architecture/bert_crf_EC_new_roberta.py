@@ -22,7 +22,7 @@ class WordDropout(nn.Module):
         return inputs * mask
     
 class Roberta_token_classification(RobertaPreTrainedModel):
-    def __init__(self, config, num_labels_=2, auxnum_labels=2):
+    def __init__(self, config, num_labels_=14, auxnum_labels=2):
         super(Roberta_token_classification, self).__init__(config)
         self.num_labels = num_labels_
         self.roberta = RobertaModel(config)
@@ -53,5 +53,36 @@ class Roberta_token_classification(RobertaPreTrainedModel):
 
 
 if __name__ == "__main__":
-    model = Roberta_token_classification.from_pretrained(r'D:\ExternalContextNER\cache\pubmedRoberta')
-    print(model)
+    # model = Roberta_token_classification.from_pretrained(r'D:\ExternalContextNER\cache\pubmedRoberta')
+    # print(model)
+    model = Roberta_token_classification.from_pretrained(r'vinai/phobert-base-v2', cache_dir="cache")
+    # print(model)
+
+    import pickle
+    # Load the parameters from the pickle file
+    with open("params.pkl", "rb") as file:
+        loaded_params = pickle.load(file)
+
+    device = "cpu"
+    # Unpack the parameters to feed into the function
+    # input_ids_text = loaded_params["input_ids_text"].to(device)
+    # segment_ids_text = loaded_params["segment_ids_text"].to(device)
+    # input_mask_text = loaded_params["input_mask_text"].to(device)
+    input_ids_img = loaded_params["input_ids_img"].to(device)
+    segment_ids_img = loaded_params["segment_ids_img"].to(device)
+    input_mask_img = loaded_params["input_mask_img"].to(device)
+    input_ids_origin = loaded_params["input_ids_origin"].to(device)
+    segment_ids_origin = loaded_params["segment_ids_origin"].to(device)
+    input_mask_origin = loaded_params["input_mask_origin"].to(device)
+    # image_features = loaded_params["image_features"].to(device)
+    # labels_text = loaded_params["labels_text"].to(device)
+    labels_img = loaded_params["labels_img"].to(device)
+    labels_origin = loaded_params["labels_origin"].to(device)
+    
+    # Use the loaded parameters to call the model
+    neg_log_likelihood = model(
+        input_ids_img, segment_ids_img, input_mask_img,
+        input_ids_origin, segment_ids_origin, input_mask_origin,
+        labels_img, labels_origin
+    )
+    print(neg_log_likelihood)
