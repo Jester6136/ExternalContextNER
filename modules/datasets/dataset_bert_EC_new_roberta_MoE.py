@@ -392,7 +392,7 @@ def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
     image_path_fail = Image.open(image_path_fail)
     inputs_image_path_fail = processor(images=image_path_fail, return_tensors="pt", padding=True)
     inputs_image_path_fail = {key: value.to(device) for key, value in inputs_image_path_fail.items()}
-    image_path_fail_features = image_feat_model.get_image_features(**inputs_image_path_fail)
+    image_path_fail_features = image_feat_model.get_image_features(**inputs_image_path_fail).to("cpu")
 
     for (ex_index, example) in enumerate(examples):
         textlist = example.text_a.split(' ')
@@ -504,7 +504,7 @@ def convert_mm_examples_to_features(examples, label_list, auxlabel_list,
             image_path = Image.open(image_path)
             input_image = processor(images=image_path, return_tensors="pt", padding=True)
             input_image = {key: value.to(device) for key, value in input_image.items()}
-            img_feat = image_feat_model.get_image_features(**input_image)
+            img_feat = image_feat_model.get_image_features(**input_image).to("cpu")
         except:
             count += 1
             img_feat = image_path_fail_features
