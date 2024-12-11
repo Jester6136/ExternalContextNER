@@ -226,8 +226,12 @@ class Roberta_token_classification(RobertaPreTrainedModel):
         moe_output_ec_text, balance_loss_ec_text, _ = self.moe(sequence_output_ec_text, input_ids_text, input_mask_text)
         
         # # Independent probability calculation for each token
-        probabilities_text = F.softmax(self.classifier(moe_output_ec_text), dim=-1)  # PθT(yi|x, I)
-        probabilities_img = F.softmax(self.classifier(moe_output_ec_img), dim=-1)    # PθI(yi|x, I)
+        ec_text_classifed = self.classifier(moe_output_ec_text) 
+    
+        ec_img_classifed = self.classifier(moe_output_ec_img) 
+        
+        probabilities_text = F.softmax(ec_text_classifed, dim=-1)  # PθT(yi|x, I)
+        probabilities_img = F.softmax(ec_img_classifed, dim=-1)    # PθI(yi|x, I)
 
         # Reduce p_T to a scalar per batch instance
         p_T_scalar = torch.mean(p_T, dim=-1, keepdim=True)  # Shape: [batch_size, 1]
@@ -243,10 +247,15 @@ class Roberta_token_classification(RobertaPreTrainedModel):
         )  # Shape: [batch_size, seq_len, num_labels]
         # Decoding with CRF
         if labels_img is not None:
-            loss = -self.crf(combined_probabilities, labels_img, mask=input_mask_img.byte(), reduction="mean")
-            return loss
+            main_loss = -self.crf(combined_probabilities, labels_img, mask=input_mask_img.byte(), reduction="mean")
+            
+            text_loss = -self.crf(ec_text_classifed, labels_text, mask=input_mask_text.byte(), reduction="mean")
+            img_loss = -self.crf(ec_img_classifed, labels_img, mask=input_mask_img.byte(), reduction="mean")
+            
+            total_loss = 0.5 * main_loss + 0.5 * (text_loss + img_loss) + balance_loss_ec_img + balance_loss_ec_text
+            return total_loss
         else:
-            predictions = self.crf.decode(combined_probabilities, mask=input_mask_img)
+            predictions = self.crf.decode(combined_probabilities, mask=input_mask_img.byte())
             return predictions
 
 if __name__ == "__main__":

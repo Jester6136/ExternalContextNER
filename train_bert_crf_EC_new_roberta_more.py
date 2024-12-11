@@ -572,7 +572,7 @@ if args.do_train:
 
         report = classification_report(y_true, y_pred, digits=4)
         sentence_list = []
-        dev_data, _ = processor._read_sbtsv(os.path.join(args.data_dir, "dev.txt"))
+        dev_data, _ , _ = processor._read_sbtsv(os.path.join(args.data_dir2, "dev.txt"))
         for i in range(len(y_pred)):
             sentence = dev_data[i][0]
             sentence_list.append(sentence)
@@ -617,31 +617,41 @@ else:
 if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
     eval_examples = processor.get_test_examples_text(args.data_dir)
     eval_examples2 = processor.get_test_examples(args.data_dir2)
-    eval_features = convert_mm_examples_to_features_text(
-        eval_examples, label_list, auxlabel_list, args.max_seq_length, tokenizer)
-    eval_features2 = convert_mm_examples_to_features(
-        eval_examples2, label_list, auxlabel_list, args.max_seq_length, tokenizer, args.path_image, image_feat_model)
     
-    logger.info("***** Running Test Evaluation with the Best Model on the Test Set*****")
-    logger.info("  Num examples = %d", len(eval_examples))
-    logger.info("  Batch size = %d", args.eval_batch_size)
-    print("***** Running Test Evaluation with the Best Model on the Test Set*****")
-    print("  Num examples = %d", len(eval_examples))
-    print("  Batch size = %d", args.eval_batch_size)
-    all_input_ids_img = torch.tensor([f.input_ids for f in eval_features2], dtype=torch.long)
-    all_input_mask_img = torch.tensor([f.input_mask for f in eval_features2], dtype=torch.long)
-    all_segment_ids_img = torch.tensor([f.segment_ids for f in eval_features2], dtype=torch.long)
-    all_label_ids_img = torch.tensor([f.label_id for f in eval_features2], dtype=torch.long)
-    all_img_feats = torch.stack([f.img_feat for f in eval_features2])
-    all_input_ids_text = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-    all_input_mask_text = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-    all_segment_ids_text = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
-    all_input_ids_origin = torch.tensor([f.input_ids2 for f in eval_features], dtype=torch.long)
-    all_input_mask_origin = torch.tensor([f.input_mask2 for f in eval_features], dtype=torch.long)
-    all_segment_ids_origin = torch.tensor([f.segment_ids2 for f in eval_features], dtype=torch.long)
-    all_label_ids_text = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
-    all_label_ids_origin = torch.tensor([f.label_id2 for f in eval_features], dtype=torch.long)
-    eval_data = TensorDataset(all_input_ids_text, all_input_mask_text,all_segment_ids_text, all_input_ids_img, all_input_mask_img, all_segment_ids_img, all_input_ids_origin, all_input_mask_origin,all_segment_ids_origin, all_img_feats, all_label_ids_text, all_label_ids_img,all_label_ids_origin)
+    
+    test_dataloader_save_path = args.data_dir2 + "/test_dataloader_dataset.pth"
+    if not os.path.exists(test_dataloader_save_path):
+        eval_features = convert_mm_examples_to_features_text(
+            eval_examples, label_list, auxlabel_list, args.max_seq_length, tokenizer)
+        eval_features2 = convert_mm_examples_to_features(
+            eval_examples2, label_list, auxlabel_list, args.max_seq_length, tokenizer, args.path_image, image_feat_model)
+        
+        logger.info("***** Running Test Evaluation with the Best Model on the Test Set*****")
+        logger.info("  Num examples = %d", len(eval_examples))
+        logger.info("  Batch size = %d", args.eval_batch_size)
+        print("***** Running Test Evaluation with the Best Model on the Test Set*****")
+        print("  Num examples = %d", len(eval_examples))
+        print("  Batch size = %d", args.eval_batch_size)
+        all_input_ids_img = torch.tensor([f.input_ids for f in eval_features2], dtype=torch.long)
+        all_input_mask_img = torch.tensor([f.input_mask for f in eval_features2], dtype=torch.long)
+        all_segment_ids_img = torch.tensor([f.segment_ids for f in eval_features2], dtype=torch.long)
+        all_label_ids_img = torch.tensor([f.label_id for f in eval_features2], dtype=torch.long)
+        all_img_feats = torch.stack([f.img_feat for f in eval_features2])
+        all_input_ids_text = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+        all_input_mask_text = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+        all_segment_ids_text = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+        all_input_ids_origin = torch.tensor([f.input_ids2 for f in eval_features], dtype=torch.long)
+        all_input_mask_origin = torch.tensor([f.input_mask2 for f in eval_features], dtype=torch.long)
+        all_segment_ids_origin = torch.tensor([f.segment_ids2 for f in eval_features], dtype=torch.long)
+        all_label_ids_text = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
+        all_label_ids_origin = torch.tensor([f.label_id2 for f in eval_features], dtype=torch.long)
+        eval_data = TensorDataset(all_input_ids_text, all_input_mask_text,all_segment_ids_text, all_input_ids_img, all_input_mask_img, all_segment_ids_img, all_input_ids_origin, all_input_mask_origin,all_segment_ids_origin, all_img_feats, all_label_ids_text, all_label_ids_img,all_label_ids_origin)
+        
+        torch.save(eval_data, test_dataloader_save_path)
+    else:
+        print("Loading the test_dataloader_save_path (TensorDataset)")
+        eval_data = torch.load(test_dataloader_save_path, weights_only=False)
+        
     # Run prediction for full data
     eval_sampler = SequentialSampler(eval_data)
     eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
@@ -709,7 +719,7 @@ if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0)
     report = classification_report(y_true, y_pred, digits=4)
 
     sentence_list = []
-    test_data, _ = processor._read_sbtsv(os.path.join(args.data_dir, "test.txt"))
+    test_data, _, _ = processor._read_sbtsv(os.path.join(args.data_dir2, "test.txt"))
     output_pred_file = os.path.join(args.output_dir, "mtmner_pred.txt")
     fout = open(output_pred_file, 'w')
     for i in range(len(y_pred)):
