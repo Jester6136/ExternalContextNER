@@ -204,8 +204,9 @@ class Roberta_token_classification(RobertaPreTrainedModel):
         input_ids_origin, segment_ids_origin, input_mask_origin, 
         image_features, labels_text=None, labels_img=None, labels_origin=None
     ):
-        text_features = self.roberta(input_ids_origin, attention_mask=input_mask_origin)
-        rT = text_features["last_hidden_state"][:, 0, :]  # CLS token
+        origin_text_features = self.roberta(input_ids_origin, attention_mask=input_mask_origin)
+        features_origin_text = origin_text_features["last_hidden_state"]
+        rT = features_origin_text[:, 0, :]  # CLS token
         rT = self.dropout(rT)
         rI = image_features.squeeze()  # Image representation rI
         # Calculate P(T|x,I)
@@ -230,8 +231,8 @@ class Roberta_token_classification(RobertaPreTrainedModel):
     
         ec_img_classifed = self.classifier(moe_output_ec_img) 
         
-        probabilities_text = F.softmax(ec_text_classifed, dim=-1)  # PθT(yi|x, I)
-        probabilities_img = F.softmax(ec_img_classifed, dim=-1)    # PθI(yi|x, I)
+        probabilities_text = ec_img_classifed
+        probabilities_img = ec_text_classifed
 
         # Reduce p_T to a scalar per batch instance
         p_T_scalar = torch.mean(p_T, dim=-1, keepdim=True)  # Shape: [batch_size, 1]
@@ -247,15 +248,18 @@ class Roberta_token_classification(RobertaPreTrainedModel):
         )  # Shape: [batch_size, seq_len, num_labels]
         # Decoding with CRF
         if labels_img is not None:
-            main_loss = -self.crf(combined_probabilities, labels_img, mask=input_mask_img.byte(), reduction="mean")
+            features_origin_text = self.dropout(features_origin_text)
+            logits_origin_text = self.classifier(features_origin_text)
             
-            text_loss = -self.crf(ec_text_classifed, labels_text, mask=input_mask_text.byte(), reduction="mean")
-            img_loss = -self.crf(ec_img_classifed, labels_img, mask=input_mask_img.byte(), reduction="mean")
+            origin_text_loss = -self.crf(logits_origin_text, labels_origin, mask=input_mask_origin.bool(), reduction='mean')
+            main_loss = -self.crf(combined_probabilities, labels_img, mask=input_mask_img.bool(), reduction="mean")
+            text_loss = -self.crf(ec_text_classifed, labels_text, mask=input_mask_text.bool(), reduction="mean")
+            img_loss = -self.crf(ec_img_classifed, labels_img, mask=input_mask_img.bool(), reduction="mean")
             
-            total_loss = 0.5 * main_loss + 0.5 * (text_loss + img_loss) + balance_loss_ec_img + balance_loss_ec_text
+            total_loss = 0.6 * main_loss + 0.32 * (text_loss + img_loss + origin_text_loss) + 0.08 * (balance_loss_ec_img + balance_loss_ec_text)
             return total_loss
         else:
-            predictions = self.crf.decode(combined_probabilities, mask=input_mask_img.byte())
+            predictions = self.crf.decode(combined_probabilities, mask=input_mask_img.bool())
             return predictions
 
 if __name__ == "__main__":

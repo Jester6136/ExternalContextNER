@@ -687,7 +687,7 @@ if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0)
         labels_origin = labels_origin.to(device)
 
         with torch.no_grad():
-            predicted_label_seq_ids = model(input_ids_text, segment_ids_text, input_mask_text, input_ids_img, segment_ids_img, input_mask_img, input_ids_origin, segment_ids_origin, input_mask_origin, image_features, labels_text, labels_img, labels_origin)
+            predicted_label_seq_ids = model(input_ids_text, segment_ids_text, input_mask_text, input_ids_img, segment_ids_img, input_mask_img, input_ids_origin, segment_ids_origin, input_mask_origin, image_features)
 
         logits = predicted_label_seq_ids
         label_ids = labels_img.to('cpu').numpy()
