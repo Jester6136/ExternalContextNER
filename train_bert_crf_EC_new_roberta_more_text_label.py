@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from transformers import AutoTokenizer,BertConfig
-from modules.model_architecture.bert_crf_EC_new_roberta_more import Roberta_token_classification
+from modules.model_architecture.bert_crf_EC_new_roberta_more_text_label import Roberta_token_classification
 from modules.datasets.dataset_bert_EC_new_roberta_MoE import convert_mm_examples_to_features, convert_mm_examples_to_features_text,MNERProcessor
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,TensorDataset, DistributedSampler)
 from pytorch_pretrained_bert.optimization import BertAdam,warmup_linear
@@ -306,9 +306,34 @@ param_optimizer = list(model.named_parameters())
 no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
 
 optimizer_grouped_parameters = [
-    {'params': [p for n, p in param_optimizer if not any(nd in n for nd in ['crf']) and not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-    {'params': [p for n, p in param_optimizer if not any(nd in n for nd in ['crf']) and any(nd in n for nd in no_decay)], 'weight_decay': 0.0},
-    {'lr' : 0.05, 'params': [p for n, p in param_optimizer if any(nd in n for nd in ['crf'])]}
+    {
+        'params': [
+            p for n, p in param_optimizer
+            if not any(nd in n for nd in ['crf', 'embeddings']) and not any(nd in n for nd in no_decay)
+        ],
+        'weight_decay': 0.01
+    },
+    {
+        'params': [
+            p for n, p in param_optimizer
+            if not any(nd in n for nd in ['crf', 'embeddings']) and any(nd in n for nd in no_decay)
+        ],
+        'weight_decay': 0.0
+    },
+    {
+        'params': [
+            p for n, p in param_optimizer
+            if any(nd in n for nd in ['embeddings']) and not any(nd in n for nd in ['crf'])
+        ],
+        'lr': 1e-6
+    },
+    {
+        'params': [
+            p for n, p in param_optimizer
+            if any(nd in n for nd in ['crf']) and not any(nd in n for nd in ['embeddings'])
+        ],
+        'lr': 0.05
+    }
 ]
 if args.fp16:
     try:
@@ -546,8 +571,8 @@ if args.do_train:
                 predicted_label_seq_ids = model(input_ids_text, segment_ids_text, input_mask_text, input_ids_img, segment_ids_img, input_mask_img, input_ids_origin, segment_ids_origin, input_mask_origin, image_features)
 
             logits = predicted_label_seq_ids
-            label_ids = labels_img.to('cpu').numpy()
-            input_mask = input_mask_img.to('cpu').numpy()
+            label_ids = labels_text.to('cpu').numpy()
+            input_mask = input_mask_text.to('cpu').numpy()
             for i, mask in enumerate(input_mask):
                 temp_1 = []
                 temp_2 = []
@@ -690,8 +715,8 @@ if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0)
             predicted_label_seq_ids = model(input_ids_text, segment_ids_text, input_mask_text, input_ids_img, segment_ids_img, input_mask_img, input_ids_origin, segment_ids_origin, input_mask_origin, image_features)
 
         logits = predicted_label_seq_ids
-        label_ids = labels_img.to('cpu').numpy()
-        input_mask = input_mask_img.to('cpu').numpy()
+        label_ids = labels_text.to('cpu').numpy()
+        input_mask = input_mask_text.to('cpu').numpy()
         for i, mask in enumerate(input_mask):
             temp_1 = []
             temp_2 = []

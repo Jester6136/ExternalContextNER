@@ -212,7 +212,7 @@ class Roberta_token_classification(RobertaPreTrainedModel):
         # Calculate P(T|x,I)
         fusion_features = torch.cat([rT, rI], dim=-1)
         p_T = torch.sigmoid(self.linear(fusion_features))  # Pθc(T|x, I)
-        p_I = 1 - p_T  # Pθc(I|x, I)
+        # p_I = 1 - p_T  # Pθc(I|x, I)
         
         
         features_ec_img = self.roberta(input_ids_img, attention_mask=input_mask_img)
@@ -247,21 +247,51 @@ class Roberta_token_classification(RobertaPreTrainedModel):
             p_T_expanded * probabilities_text + p_I_expanded * probabilities_img
         )  # Shape: [batch_size, seq_len, num_labels]
         # Decoding with CRF
-        if labels_img is not None:
+        if labels_text is not None:
             features_origin_text = self.dropout(features_origin_text)
             logits_origin_text = self.classifier(features_origin_text)
             
             origin_text_loss = -self.crf(logits_origin_text, labels_origin, mask=input_mask_origin.bool(), reduction='mean')
-            main_loss = -self.crf(combined_probabilities, labels_img, mask=input_mask_img.bool(), reduction="mean")
+            main_loss = -self.crf(combined_probabilities, labels_text, mask=input_mask_text.bool(), reduction="mean")
             # text_loss = -self.crf(ec_text_classifed, labels_text, mask=input_mask_text.bool(), reduction="mean")
-            # img_loss = -self.crf(ec_img_classifed, labels_img, mask=input_mask_img.bool(), reduction="mean")
+            # img_loss = -self.crf(ec_img_classifed, labels_text, mask=input_mask_text.bool(), reduction="mean")
             
-            total_loss = 0.6 * main_loss +  + 0.32 + (balance_loss_ec_img + balance_loss_ec_text + origin_text_loss)
+            total_loss = 0.6 * main_loss + 0.32 * (balance_loss_ec_text + balance_loss_ec_img + origin_text_loss)
             return total_loss
         else:
-            predictions = self.crf.decode(combined_probabilities, mask=input_mask_img.bool())
+            predictions = self.crf.decode(combined_probabilities, mask=input_mask_text.bool())
             return predictions
 
 if __name__ == "__main__":
     model = Roberta_token_classification.from_pretrained(r'vinai/phobert-base-v2', cache_dir="cache")
-    print(model)
+    # print(model)
+
+    import pickle
+    # Load the parameters from the pickle file
+    with open("params.pkl", "rb") as file:
+        loaded_params = pickle.load(file)
+
+    device = "cpu"
+    # Unpack the parameters to feed into the function
+    input_ids_text = loaded_params["input_ids_text"].to(device)
+    segment_ids_text = loaded_params["segment_ids_text"].to(device)
+    input_mask_text = loaded_params["input_mask_text"].to(device)
+    input_ids_img = loaded_params["input_ids_img"].to(device)
+    segment_ids_img = loaded_params["segment_ids_img"].to(device)
+    input_mask_img = loaded_params["input_mask_img"].to(device)
+    input_ids_origin = loaded_params["input_ids_origin"].to(device)
+    segment_ids_origin = loaded_params["segment_ids_origin"].to(device)
+    input_mask_origin = loaded_params["input_mask_origin"].to(device)
+    image_features = loaded_params["image_features"].to(device)
+    labels_text = loaded_params["labels_text"].to(device)
+    labels_img = loaded_params["labels_img"].to(device)
+    labels_origin = loaded_params["labels_origin"].to(device)
+    
+    # Use the loaded parameters to call the model
+    neg_log_likelihood = model(
+        input_ids_text, segment_ids_text, input_mask_text,
+        input_ids_img, segment_ids_img, input_mask_img,
+        input_ids_origin, segment_ids_origin, input_mask_origin,
+        image_features, labels_text, labels_img, labels_origin
+    )
+    print(neg_log_likelihood)

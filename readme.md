@@ -128,3 +128,62 @@ python train_bert_crf_EC_new_roberta.py \
     --task_name "sonba" \
     --cache_dir "cache" \
     --max_seq_length 256
+
+
+export LABELS="I-PRODUCT-AWARD,B-MISCELLANEOUS,B-QUANTITY-NUM,B-ORGANIZATION-SPORTS,B-DATETIME,I-ADDRESS,I-PERSON,I-EVENT-SPORT,B-ADDRESS,B-EVENT-NATURAL,I-LOCATION-GPE,B-EVENT-GAMESHOW,B-DATETIME-TIMERANGE,I-QUANTITY-NUM,I-QUANTITY-AGE,B-EVENT-CUL,I-QUANTITY-TEM,I-PRODUCT-LEGAL,I-LOCATION-STRUC,I-ORGANIZATION,B-PHONENUMBER,B-IP,O,B-QUANTITY-AGE,I-DATETIME-TIME,I-DATETIME,B-ORGANIZATION-MED,B-DATETIME-SET,I-EVENT-CUL,B-QUANTITY-DIM,I-QUANTITY-DIM,B-EVENT,B-DATETIME-DATERANGE,I-EVENT-GAMESHOW,B-PRODUCT-AWARD,B-LOCATION-STRUC,B-LOCATION,B-PRODUCT,I-MISCELLANEOUS,B-SKILL,I-QUANTITY-ORD,I-ORGANIZATION-STOCK,I-LOCATION-GEO,B-PERSON,B-PRODUCT-COM,B-PRODUCT-LEGAL,I-LOCATION,B-QUANTITY-TEM,I-PRODUCT,B-QUANTITY-CUR,I-QUANTITY-CUR,B-LOCATION-GPE,I-PHONENUMBER,I-ORGANIZATION-MED,I-EVENT-NATURAL,I-EMAIL,B-ORGANIZATION,B-URL,I-DATETIME-TIMERANGE,I-QUANTITY,I-IP,B-EVENT-SPORT,B-PERSONTYPE,B-QUANTITY-PER,I-QUANTITY-PER,I-PRODUCT-COM,I-DATETIME-DURATION,B-LOCATION-GPE-GEO,B-QUANTITY-ORD,I-EVENT,B-DATETIME-TIME,B-QUANTITY,I-DATETIME-SET,I-LOCATION-GPE-GEO,B-ORGANIZATION-STOCK,I-ORGANIZATION-SPORTS,I-SKILL,I-URL,B-DATETIME-DURATION,I-DATETIME-DATE,I-PERSONTYPE,B-DATETIME-DATE,I-DATETIME-DATERANGE,B-LOCATION-GEO,B-EMAIL,E,X,<s>,</s>"
+python train_bert_crf_EC_new_roberta_more_img_label.py \
+    --do_train \
+    --do_eval \
+    --output_dir "./VLSP2021_more_img_only_fusion" \
+    --bert_model "vinai/phobert-base-v2" \
+    --learning_rate 3e-5 \
+    --data_dir "/home/rad/bags/data_vlsp/MoRe_text/VLSP2021" \
+    --data_dir2 "/home/rad/bags/data_vlsp/MoRe_image/VLSP2021" \
+    --num_train_epochs 10 \
+    --train_batch_size 6 \
+    --task_name "sonba" \
+    --path_image "/home/rad/bags/data_vlsp/origin+image/VLSP2021/ner_image" \
+    --cache_dir "cache" \
+    --max_seq_length 256
+
+
+export LABELS="B-ORG,B-MISC,I-PER,I-ORG,B-LOC,I-MISC,I-LOC,O,B-PER,E,X,<s>,</s>"
+python train_bert_crf_EC_new_roberta_more_img_label.py \
+    --do_train \
+    --do_eval \
+    --output_dir "./VLSP2016_more_img_only_fusion" \
+    --bert_model "vinai/phobert-base-v2" \
+    --learning_rate 5e-5 \
+    --data_dir "/home/rad/bags/data_vlsp/MoRe_text/VLSP2016" \
+    --data_dir2 "/home/rad/bags/data_vlsp/MoRe_image/VLSP2016" \
+    --num_train_epochs 40 \
+    --train_batch_size 8 \
+    --task_name "sonba" \
+    --path_image "/home/rad/bags/data_vlsp/origin+image/VLSP2016/ner_image" \
+    --cache_dir "cache" \
+    --max_seq_length 256
+
+
+
+
+export LABELS="B-ORG,B-MISC,I-PER,I-ORG,B-LOC,I-MISC,I-LOC,O,B-PER,E,X,<s>,</s>"
+python train_bert_crf_EC_new_roberta_more_text_label.py \
+    --do_train \
+    --do_eval \
+    --output_dir "./VLSP2016_more_text_label" \
+    --bert_model "vinai/phobert-base-v2" \
+    --learning_rate 3e-5 \
+    --data_dir "/home/rad/bags/data_vlsp/MoRe_text/VLSP2016" \
+    --data_dir2 "/home/rad/bags/data_vlsp/MoRe_image/VLSP2016" \
+    --num_train_epochs 10 \
+    --train_batch_size 8 \
+    --task_name "sonba" \
+    --path_image "/home/rad/bags/data_vlsp/origin+image/VLSP2016/ner_image" \
+    --cache_dir "cache" \
+    --max_seq_length 256
+
+
+    python train_bert_crf_EC_new_roberta_more_text_label.py     --do_train     --do_eval     --output_dir "./VLSP2016_more_text_label_055005"     --bert_model "vinai/phobert-base-v2"     --learning_rate 3e-5     --data_dir "/home/rad/bags/data_vlsp/MoRe_text/VLSP2016"     --data_dir2 "/home/rad/bags/data_vlsp/MoRe_image/VLSP2016"     --num_train_epochs 10     --train_batch_size 7     --task_name "sonba"     --path_image "/home/rad/bags/data_vlsp/origin+image/VLSP2016/ner_image"     --cache_dir "cache"     --max_seq_length 256
+
+
+
